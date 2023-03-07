@@ -5,6 +5,7 @@ import axios from "axios";
 import {
   format,
   parseISO,
+  parse,
   differenceInMonths,
   eachMonthOfInterval,
   addYears,
@@ -21,7 +22,6 @@ import IconButton from "@mui/material/IconButton";
 // data ui
 import { DataGrid } from "@mui/x-data-grid";
 import LineGraph1 from "./components/LineGraph1";
-import LineGraph from "./components/LineGraph";
 
 // Icons
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,10 +38,6 @@ function App() {
   const [sortedRows, setSortedRows] = useState([]);
   const [mode, setMode] = useState("Monthly");
   const [totalTime, setTotalTime] = useState(120);
-  const [startDate, setStartDate] = useState(
-    new Date("2017-03-02T14:39:57.760Z")
-  );
-  const [endDate, setEndDate] = useState(new Date("2027-03-02T14:39:57.760Z"));
 
   const [graphDataPoints, setGraphDataPoints] = useState([]);
 
@@ -73,7 +69,7 @@ function App() {
   };
 
   const handleModeChange = (e) => {
-    setCountry(e.target.value);
+    setMode(e.target.value);
   };
 
   const fetchData = async () => {
@@ -81,28 +77,7 @@ function App() {
     try {
       const res = await axios("http://localhost:5000/calculator");
       setRows(res.data.data);
-      // console.log(res.data.data);
-      // console.log(res.data.data[1]);
 
-      //  row.offsetPerMonth.forEach((array) => {
-      //     Object.entries(array).forEach(([key, value]) => {
-      //       if (result.hasOwnProperty(key)) {
-      //         result[key] += value;
-      //       } else {
-      //         result[key] = value;
-      //       }
-      //     });
-      //   });
-      // allGraphData.push(data.offsetPerMonth);
-
-      // setGraphDataPoints(allGraphData);
-      // });
-      // graphObject.data = allGraphData;
-
-      // const numMonths = await axios(
-      //   "http://localhost:5000/calculator/totalTime"
-      // );
-      // setTotalTime(numMonths);
       setLoading({ isLoading: false });
     } catch (error) {
       console.log(error);
@@ -113,7 +88,7 @@ function App() {
   const addRow = async () => {
     setLoading({ isLoading: true });
     try {
-      let date = new Date(2026, 9, 1);
+      let date = new Date("2022, 2, 1");
       let num_trees = Math.floor(Math.random() * 20);
       console.log(date);
       idCounter += 1;
@@ -149,8 +124,6 @@ function App() {
         res.data ? console.log(res.data) : console.log(`Entry failed`);
         setLoading({ isLoading: false });
         fetchData();
-
-        // console.log(getOffsetPerMonth(date, num_trees));
       }
     } catch (error) {
       console.log(error);
@@ -174,23 +147,34 @@ function App() {
     }
   };
 
-  // const getOffsetPerMonth = (num_trees, purchaseDate, endDate) => {
-  //   const months = eachMonthOfInterval({
-  //     start: purchaseDate,
-  //     end: endDate,
-  //   });
+  const getOffsetPerMonth = (num_trees, purchaseDate, endDate) => {
+    console.log(
+      "🚀 ~ file: App.jsx:154 ~ getOffsetPerMonth ~ endDate:",
+      endDate
+    );
+    console.log(
+      "🚀 ~ file: App.jsx:154 ~ getOffsetPerMonth ~ purchaseDate:",
+      purchaseDate
+    );
 
-  //   const result = months.map((month, index) => {
-  //     const year = index / 12;
+    const months = eachMonthOfInterval({
+      start: purchaseDate,
+      end: endDate,
+    });
 
-  //     const offsetPerTree = year < 6 ? (28.5 / 72) * index : 28.5;
-  //     console.log(offsetPerTree);
-  //     const totalOffset = offsetPerTree * num_trees;
-  //     return { month: month, totalOffset: totalOffset.toFixed(2) };
-  //   });
+    console.log(months);
 
-  //   return result;
-  // };
+    const result = months.map((month, index) => {
+      const year = index / 12;
+
+      const offsetPerTree = year < 6 ? (28.5 / 72) * index : 28.5;
+      console.log(offsetPerTree);
+      const totalOffset = offsetPerTree * num_trees;
+      return { month: month, totalOffset: totalOffset.toFixed(2) };
+    });
+
+    return result;
+  };
 
   // populate table on first render
   useEffect(() => {
@@ -201,54 +185,78 @@ function App() {
     if (rows.length > 0) {
       console.log(rows);
 
-      const sortedRows = [...rows].sort(
-        (a, b) => new Date(a.date) - new Date(b.date)
-      );
-
-      const endDate = addYears(parseISO(sortedRows[sortedRows.length - 1]), 4);
-
-      const offsetArray = sortedRows.map((row) => {
-        console.log(row);
-        console.log(getOffsetPerMonth(row.num_trees, row.date, endDate));
-        return getOffsetPerMonth(row.num_trees, row.date, endDate);
-      });
-
-      // const dates = rows.map((row)=> {
-      //   return row.date
-      // })
+      // const dates = rows.map((row) => {
+      //   return row.date;
+      // });
 
       // dates.sort((a, b) => new Date(a) - new Date(b));
 
-      //   const endDate = addYears(parseISO(dates[dates.length - 1]), 4);
+      // console.log(dates);
 
-      // extract all offsetData from table
-      // const allOffsetData = rows.map((row, i) => {
-      //   return row.offsetPerMonth;
-      // });
+      // // console.log(parseISO(dates[dates.length - 1]));
+      // // console.log(addYears(parseISO(dates[dates.length - 1]), 6));
+      // setEndDate(addYears(parseISO(dates[dates.length - 1]), 6));
 
-      // // merge the arrays into one long array
-      // const mergedArray = allOffsetData.reduce(
-      //   (acc, curr) => [...acc, ...curr],
-      //   []
-      // );
+      const newRows = rows.map((row) => {
+        return row;
+      });
+
+      console.log(newRows);
+
+      newRows.sort((a, b) => parseISO(a.date) - parseISO(b.date));
+      console.log(newRows);
+      console.log(addYears(parseISO(newRows[newRows.length - 1].date), 6));
+      const endDate = addYears(parseISO(newRows[newRows.length - 1].date), 6);
+      console.log(endDate);
+
+      const offsetArray = newRows.map((row) => {
+        const months = eachMonthOfInterval({
+          start: new Date(row.date),
+          end: new Date(endDate),
+        });
+        const result = months.map((month, index) => {
+          const year = index / 12;
+
+          const offsetPerTree = year < 6 ? (28.5 / 72) * index : 28.5;
+
+          const totalOffset = offsetPerTree * row.num_trees;
+          return { month: month, totalOffset: totalOffset.toFixed(2) };
+        });
+
+        return result;
+      });
+
+      console.log(offsetArray);
+
+      // // // merge the arrays into one long array
+      const mergedArray = offsetArray.reduce(
+        (acc, curr) => [...acc, ...curr],
+        []
+      );
+
+      console.log(mergedArray);
 
       // // map through the array and
-      // const result = {};
-      // mergedArray.map((obj) => {
-      //   const { month, totalOffset } = obj;
-      //   if (result.hasOwnProperty(month)) {
-      //     result[month] += Number(totalOffset);
-      //   } else {
-      //     result[month] = Number(totalOffset);
-      //   }
-      // });
+      const result = {};
+      mergedArray.map((obj) => {
+        const { month, totalOffset } = obj;
+        if (result.hasOwnProperty(month)) {
+          result[month] += Number(totalOffset);
+        } else {
+          result[month] = Number(totalOffset);
+        }
+      });
 
-      // const finalResult = Object.keys(result).map((month) => ({
-      //   month,
-      //   totalOffset: result[month].toFixed(2),
-      // }));
+      console.log(result);
 
-      // setGraphDataPoints(finalResult);
+      const finalResult = Object.keys(result).map((month) => ({
+        month,
+        totalOffset: result[month].toFixed(2),
+      }));
+
+      console.log(finalResult);
+
+      setGraphDataPoints(finalResult);
     }
   }, [rows]);
 
@@ -270,7 +278,7 @@ function App() {
       align: "center",
       headerAlign: "center",
       valueFormatter: (params) => {
-        const date = new Date(params.value);
+        let date = new Date(params.value);
 
         return format(date, "MMM-yyyy");
       },
@@ -354,43 +362,43 @@ function App() {
   //   // }
   // };
 
-  const graphData = [
-    {
-      date: { startDate },
-      data: [
-        {
-          AverageCO2: cO2,
-          purchase1: sortedRows[0],
-          purchase2: 0,
-        },
-        {
-          x: totalTime - 36,
-          y: cO2,
-        },
-        {
-          x: totalTime,
-          y: cO2,
-        },
-      ],
-    },
-    {
-      date: { endDate },
-      data: [
-        {
-          AverageCO2: cO2,
-          y: 0,
-        },
-        {
-          x: totalTime - 36,
-          y: 18,
-        },
-        {
-          x: totalTime,
-          y: 18,
-        },
-      ],
-    },
-  ];
+  // const graphData = [
+  //   {
+  //     date: { startDate },
+  //     data: [
+  //       {
+  //         AverageCO2: cO2,
+  //         purchase1: sortedRows[0],
+  //         purchase2: 0,
+  //       },
+  //       {
+  //         x: totalTime - 36,
+  //         y: cO2,
+  //       },
+  //       {
+  //         x: totalTime,
+  //         y: cO2,
+  //       },
+  //     ],
+  //   },
+  //   {
+  //     date: { endDate },
+  //     data: [
+  //       {
+  //         AverageCO2: cO2,
+  //         y: 0,
+  //       },
+  //       {
+  //         x: totalTime - 36,
+  //         y: 18,
+  //       },
+  //       {
+  //         x: totalTime,
+  //         y: 18,
+  //       },
+  //     ],
+  //   },
+  // ];
 
   return (
     <div className="App">
@@ -405,6 +413,7 @@ function App() {
                 <CustomSelect
                   label={"Country"}
                   value={country}
+                  key="country-select"
                   handleChange={handleCountryChange}
                   options={countries}
                 />
@@ -413,6 +422,7 @@ function App() {
                 <CustomSelect
                   label={"Simulation Mode"}
                   value={mode}
+                  key="mode-select"
                   handleChange={handleModeChange}
                   options={modes}
                 />
@@ -426,30 +436,12 @@ function App() {
                   rows={rows}
                   columns={columns}
                   rowsPerPageOptions={[5, 10, 25]}
-                  components={{
-                    Footer: CustomFooter,
-                  }}
-                  componentsProps={{
-                    footer: { total: total },
-                  }}
-                  // onStateChange={(state) => {
-                  // const rowData = Object.values(state.rows.idRowsLookup);
-                  // // time calcs
-                  // let total = 0;
-                  // const dates = rowData.map((row) => {
-                  //   total += row.num_trees;
-                  //   return row.date;
-                  // });
-                  // dates.sort((a, b) => new Date(a) - new Date(b));
-                  // setSortedRows(dates);
-                  // const earliest = parseISO(dates[0]);
-                  // const latest = parseISO(dates[dates.length - 1]);
-                  // // TODO CONSIDER SETTING EARLIEST START DATE TO THE START DATE FOR EVERY
-                  // setStartDate(earliest);
-                  // setEndDate(addYears(latest, 2));
-                  // // const monthsDiff = differenceInMonths(earliest, latest);
-                  // // setTotalTime(Math.abs(monthsDiff) + 36);
-                  // setTotal(total);
+                  experimentalFeatures={{ newEditingApi: true }}
+                  // components={{
+                  //   Footer: CustomFooter,
+                  // }}
+                  // componentsProps={{
+                  //   footer: { total: total },
                   // }}
                 />
               </div>
