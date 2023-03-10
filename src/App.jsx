@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 
 import axios from "axios";
 
@@ -15,6 +16,10 @@ import IconButton from "@mui/material/IconButton";
 // data ui
 import { DataGrid } from "@mui/x-data-grid";
 import LineGraph1 from "./components/LineGraph1";
+
+// date picker
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Icons
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -72,15 +77,12 @@ function App() {
     }
   };
 
-  const addRow = async () => {
+  const addRow = async (data) => {
     setLoading({ isLoading: true });
     try {
-      let date = new Date("2022, 2, 1");
-      let num_trees = Math.floor(Math.random() * 20);
-
       const res = await axios.post(`http://localhost:5000/calculator`, {
-        date: date,
-        num_trees: num_trees,
+        date: data.date,
+        num_trees: data.num_trees,
       });
       if (res.status === 201) {
         res.data ? console.log(res.data) : console.log(`Entry failed`);
@@ -132,6 +134,55 @@ function App() {
       setLoading({ isLoading: false });
     }
   };
+
+  function PurchaseForm() {
+    const {
+      register,
+      handleSubmit,
+      control,
+      watch,
+
+      formState: { errors },
+    } = useForm({ mode: "onChanges", reValidateMode: "onChange" });
+    const onSubmit = (data) => addRow(data);
+
+    return (
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
+        <label htmlFor="date" className="text-xs text-bold">
+          Date
+        </label>
+        <Controller
+          control={control}
+          name="date"
+          required={{ required: true }}
+          render={({ field }) => (
+            <DatePicker
+              className="mb-2 border border-black rounded-md p-2"
+              placeholderText="Select date"
+              onChange={(date) => field.onChange(date)}
+              selected={field.value}
+            />
+          )}
+        />
+
+        {/* include validation with required or other standard HTML validation rules */}
+        <label htmlFor="num_trees" className="text-xs text-bold">
+          Number of Trees
+        </label>
+        <input
+          className="mb-2 border border-black rounded-md p-2"
+          {...register("num_trees", { required: true })}
+        />
+        {/* errors will return when field validation fails  */}
+        {errors.num_trees && <span>This field is required</span>}
+
+        <input
+          type="submit"
+          className="self-center bg-blue-500 text-white p-2 rounded-xl w-1/3"
+        />
+      </form>
+    );
+  }
 
   // populate table on first render
   useEffect(() => {
@@ -309,6 +360,9 @@ function App() {
                   rowsPerPageOptions={[5, 10, 25]}
                 />
               </div>
+            </div>
+            <div className="my-3 px-6">
+              <PurchaseForm />
             </div>
             <Button
               variant="contained"
