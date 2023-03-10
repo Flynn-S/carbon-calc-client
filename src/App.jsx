@@ -6,7 +6,6 @@ import axios from "axios";
 import { format, parseISO, eachMonthOfInterval, addYears } from "date-fns";
 
 // ui
-import CustomFooter from "./components/CustomFooter";
 import CustomSelect from "./components/CustomSelect";
 
 // material ui
