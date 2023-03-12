@@ -76,12 +76,35 @@ function App() {
     }
   };
 
+  function isPurchaseAllowed(data) {
+    const purchaseYear = data.date.getFullYear();
+
+    const purchasesThisYear = rows.filter((row) => {
+      return parseISO(row.date).getFullYear() == purchaseYear;
+    });
+
+    // Calculate the total number of trees purchased so far this year
+    const totalPurchasedThisYear = purchasesThisYear.reduce(function (
+      total,
+      row
+    ) {
+      return total + Number(row.num_trees);
+    },
+    0);
+
+    // Check if the new purchase would exceed the limit of 50 trees per year
+    if (totalPurchasedThisYear + Number(data.num_trees) > 50) {
+      return false;
+    }
+    return true;
+  }
+
   const addRow = async (data) => {
     setLoading({ isLoading: true });
     try {
       const res = await axios.post(`http://localhost:5000/calculator`, {
         date: data.date,
-        num_trees: data.num_trees,
+        num_trees: Number(data.num_trees),
       });
       if (res.status === 201) {
         res.data ? console.log(res.data) : console.log(`Entry failed`);
@@ -139,14 +162,28 @@ function App() {
       register,
       handleSubmit,
       control,
+      setError,
       watch,
 
       formState: { errors },
     } = useForm({ mode: "onChanges", reValidateMode: "onChange" });
-    const onSubmit = (data) => addRow(data);
-
+    const onSubmit = (data) => {
+      if (!isPurchaseAllowed(data)) {
+        setError("num_trees", {
+          type: "custom",
+          message:
+            "You can only purchase a maximum of 50 trees per calender year",
+        });
+      } else {
+        addRow(data);
+      }
+    };
     return (
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col border border-grey-900 rounded-md p-2 w-1/2"
+      >
+        <h3 className="text-xl p-3">Schedule trees to plant</h3>
         <label htmlFor="date" className="text-xs text-bold">
           Date
         </label>
@@ -156,6 +193,9 @@ function App() {
           required={{ required: true }}
           render={({ field }) => (
             <DatePicker
+              // wrapperClassName="datePicker"
+              // calendarClassName="datePicker-calendar"
+              popperClassName="datePicker-popper"
               className="mb-2 border border-black rounded-md p-2"
               placeholderText="Select date"
               onChange={(date) => field.onChange(date)}
@@ -165,19 +205,28 @@ function App() {
         />
 
         {/* include validation with required or other standard HTML validation rules */}
-        <label htmlFor="num_trees" className="text-xs text-bold">
+        <label htmlFor="num_trees" className="text-xs text-bold ">
           Number of Trees
         </label>
         <input
+          type="number"
           className="mb-2 border border-black rounded-md p-2"
-          {...register("num_trees", { required: true })}
+          {...register("num_trees", {
+            required: true,
+          })}
         />
         {/* errors will return when field validation fails  */}
-        {errors.num_trees && <span>This field is required</span>}
+        {errors.num_trees?.type === "required" && (
+          <span className="text-red-500">This field is required</span>
+        )}
+        <span className="text-red-500">
+          {errors.num_trees?.type === "custom" && errors.num_trees.message}
+        </span>
 
         <input
           type="submit"
-          className="self-center bg-blue-500 text-white p-2 rounded-xl w-1/3"
+          value="Add Purchase"
+          className="cursor-pointer bg-blue-500 text-white p-2 rounded-xl "
         />
       </form>
     );
@@ -210,9 +259,10 @@ function App() {
         const result = months.map((month, index) => {
           const year = index / 12;
 
-          const offsetPerTree = year < 6 ? (28.5 / 72) * index : 28.5;
+          const offsetPerTreePerMonth =
+            year < 6 ? (28.5 / 12 / 72) * index : 28.5 / 12;
 
-          const totalOffset = offsetPerTree * row.num_trees;
+          const totalOffset = offsetPerTreePerMonth * row.num_trees;
           return { month: month, totalOffset: totalOffset.toFixed(2) };
         });
 
@@ -224,8 +274,6 @@ function App() {
         (acc, curr) => [...acc, ...curr],
         []
       );
-
-      console.log(mergedArray);
 
       // create an object which sums all the offsets on the same date
       const result = {};
@@ -258,14 +306,6 @@ function App() {
   }, [rows]);
 
   const columns = [
-    {
-      field: "id",
-      headerName: "ID",
-      flex: 1,
-      type: "number",
-      align: "center",
-      headerAlign: "center",
-    },
     {
       field: "date",
       headerName: "Month & Year",
@@ -328,7 +368,7 @@ function App() {
           <div>
             <h1 className="title mb-6">Carbon Offset Simulation Tool</h1>
 
-            <div className="input-box mb-6">
+            <div className="input-box mb-3">
               {/* label, variable, handleChange, options */}
               <div className="m-3">
                 <CustomSelect
@@ -349,27 +389,28 @@ function App() {
                 />
               </div>
             </div>
-            <div className="flex h-[60vh] justify-center">
-              <div className="flex justify-center w-full">
+            <div className="h-[45vh] flex px-3">
+              <div className="flex flex-col items-center justify-center min-w-full">
+                <h2 className="text-2xl pb-1">Purchase Planner</h2>
                 <DataGrid
                   justify="center"
                   sx={{ width: "100%" }}
                   rows={rows}
                   columns={columns}
-                  rowsPerPageOptions={[5, 10, 25]}
+                  isCellEditable={(params) => false}
+                  pageSizeOptions={[5, 10, 25]}
+                  initialState={{
+                    pagination: { paginationModel: { pageSize: 5 } },
+                    sorting: {
+                      sortModel: [{ field: "date", sort: "asc" }],
+                    },
+                  }}
                 />
               </div>
             </div>
-            <div className="my-3 px-6">
+            <div className="my-3 px-3">
               <PurchaseForm />
             </div>
-            <Button
-              variant="contained"
-              onClick={(e) => addRow()}
-              endIcon={<AddCircleIcon />}
-            >
-              Add Row
-            </Button>
           </div>
           <div className="p-8">
             <div>GRAPHS GO HERE</div>
