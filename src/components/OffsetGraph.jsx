@@ -57,14 +57,18 @@ const LineGraph1 = ({ data, cO2 }) => {
         >
           <Label
             value="Carbon Offset (kg)"
-            offset={0}
+            offset={-10}
             angle={-90}
             position="insideLeft"
           />
         </YAxis>
         <Tooltip />
         <Legend />
-        <ReferenceLine y={cO2} label="Average Carbon Offset" stroke="red" />
+        <ReferenceLine
+          y={cO2}
+          label="Your Average Carbon Offset"
+          stroke="red"
+        />
         <Line type="monotone" dataKey="totalOffset" stroke="blue" dot={false} />
       </LineChart>
     </ResponsiveContainer>
