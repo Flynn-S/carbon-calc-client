@@ -20,6 +20,10 @@ body {
   transform: translate(98px, -255px) !important;
 }
 
+.datePicker {
+  width: 100%;
+}
+
 .react-datepicker__input-container input {
   width: 100%;
 }

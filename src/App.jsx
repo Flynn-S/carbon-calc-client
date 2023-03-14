@@ -14,7 +14,8 @@ import IconButton from "@mui/material/IconButton";
 
 // data ui
 import { DataGrid } from "@mui/x-data-grid";
-import LineGraph1 from "./components/LineGraph1";
+import OffsetGraph from "./components/OffsetGraph";
+import CostGraph from "./components/CostGraph";
 
 // date picker
 import DatePicker from "react-datepicker";
@@ -31,7 +32,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [mode, setMode] = useState("Monthly");
-  const [graphDataPoints, setGraphDataPoints] = useState([]);
+  const [offsetDataPoints, setOffsetDataPoints] = useState([]);
+  const [costDataPoints, setCostDataPoints] = useState([]);
   const modes = ["Monthly", "Annually"];
 
   const co2Data = [
@@ -179,56 +181,69 @@ function App() {
       }
     };
     return (
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col border border-grey-900 rounded-md p-2 w-1/2"
-      >
+      <>
         <h3 className="text-xl p-3">Schedule trees to plant</h3>
-        <label htmlFor="date" className="text-xs text-bold">
-          Date
-        </label>
-        <Controller
-          control={control}
-          name="date"
-          required={{ required: true }}
-          render={({ field }) => (
-            <DatePicker
-              // wrapperClassName="datePicker"
-              // calendarClassName="datePicker-calendar"
-              popperClassName="datePicker-popper"
-              className="mb-2 border border-black rounded-md p-2"
-              placeholderText="Select date"
-              onChange={(date) => field.onChange(date)}
-              selected={field.value}
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="border border-grey-900 rounded-md p-2 w-full flex"
+        >
+          <div className="flex flex-col grow mx-2">
+            <label htmlFor="date" className="text-xs text-bold">
+              Date
+            </label>
+            <Controller
+              control={control}
+              name="date"
+              required={{ required: true }}
+              render={({ field }) => (
+                <DatePicker
+                  wrapperClassName="datePicker"
+                  showYearDropdown
+                  yearDropdownItemNumber={20}
+                  scrollableYearDropdown
+                  popperClassName="datePicker-popper"
+                  className="mb-2 border border-black rounded-md p-2"
+                  placeholderText="Select date"
+                  onChange={(date) => field.onChange(date)}
+                  selected={field.value}
+                />
+              )}
             />
-          )}
-        />
+          </div>
 
-        {/* include validation with required or other standard HTML validation rules */}
-        <label htmlFor="num_trees" className="text-xs text-bold ">
-          Number of Trees
-        </label>
-        <input
-          type="number"
-          className="mb-2 border border-black rounded-md p-2"
-          {...register("num_trees", {
-            required: true,
-          })}
-        />
-        {/* errors will return when field validation fails  */}
-        {errors.num_trees?.type === "required" && (
-          <span className="text-red-500">This field is required</span>
-        )}
-        <span className="text-red-500">
-          {errors.num_trees?.type === "custom" && errors.num_trees.message}
-        </span>
-
-        <input
+          {/* include validation with required or other standard HTML validation rules */}
+          <div className="flex flex-col grow mx-2">
+            <label htmlFor="num_trees" className="text-xs text-bold ">
+              Number of Trees
+            </label>
+            <input
+              type="number"
+              className="mb-2 border border-black rounded-md p-2 "
+              {...register("num_trees", {
+                required: true,
+              })}
+            />
+            {/* errors will return when field validation fails  */}
+            {errors.num_trees?.type === "required" && (
+              <span className="text-red-500">This field is required</span>
+            )}
+            <span className="text-red-500">
+              {errors.num_trees?.type === "custom" && errors.num_trees.message}
+            </span>
+          </div>
+          <button
+            type="submit"
+            className=" bg-blue-500 text-white rounded-full px-2 my-3"
+          >
+            <AddCircleIcon />
+          </button>
+          {/* <input
           type="submit"
-          value="Add Purchase"
+          value={`${(<AddCircleIcon />)}`}
           className="cursor-pointer bg-blue-500 text-white p-2 rounded-xl "
-        />
-      </form>
+        /> */}
+        </form>
+      </>
     );
   }
 
@@ -237,7 +252,7 @@ function App() {
     fetchData();
   }, []);
 
-  // CALCULATE TOTAL OFFSET TO PLOT ON GRAPH
+  // CALCULATE TOTAL OFFSET TO PLOT ON offset
   useEffect(() => {
     if (rows.length > 0) {
       const newRows = rows.map((row) => {
@@ -263,7 +278,8 @@ function App() {
             year < 6 ? (28.5 / 12 / 72) * index : 28.5 / 12;
 
           const totalOffset = offsetPerTreePerMonth * row.num_trees;
-          return { month: month, totalOffset: totalOffset.toFixed(2) };
+
+          return { month: month, totalOffset: Number(totalOffset).toFixed(2) };
         });
 
         return result;
@@ -301,7 +317,69 @@ function App() {
         };
       });
 
-      setGraphDataPoints(formatDates);
+      setOffsetDataPoints(formatDates);
+    }
+  }, [rows]);
+
+  useEffect(() => {
+    if (rows.length > 0) {
+      const costRows = rows.map((row) => {
+        return row;
+      });
+
+      costRows.sort((a, b) => parseISO(a.date) - parseISO(b.date));
+
+      // set common end date 6 years after the final date.
+      const endDate = addYears(parseISO(costRows[costRows.length - 1].date), 6);
+
+      const costArray = costRows.map((row) => {
+        const months = eachMonthOfInterval({
+          start: new Date(row.date),
+          end: new Date(endDate),
+        });
+        const result = months.map((month, index) => {
+          const costPerTreePerMonth = index === 0 ? 120 : 1;
+
+          const totalCost = costPerTreePerMonth * row.num_trees;
+
+          return { month: month, totalCost: Number(totalCost).toFixed(2) };
+        });
+
+        return result;
+      });
+
+      //  merge 3 arrays into 1
+      const mergedCostArray = costArray.reduce(
+        (acc, curr) => [...acc, ...curr],
+        []
+      );
+
+      console.log(mergedCostArray);
+
+      // create an object which sums all the costs on the same date
+      const result = {};
+      mergedCostArray.map((obj) => {
+        const { month, totalCost } = obj;
+        if (result.hasOwnProperty(month)) {
+          result[month] += Number(totalCost);
+        } else {
+          result[month] = Number(totalCost);
+        }
+      });
+
+      // convert object back into array of objects
+      const costPerMonthArray = Object.keys(result).map((month) => ({
+        month,
+        totalCost: result[month],
+      }));
+
+      // mutate the costPerMonth array to use cumulative cost instead.
+      let cumulativeCost = 0;
+      for (let i = 0; i < costPerMonthArray.length; i++) {
+        cumulativeCost += Number(costPerMonthArray[i].totalCost);
+        costPerMonthArray[i].totalCost = Number(cumulativeCost);
+      }
+      setCostDataPoints(costPerMonthArray);
     }
   }, [rows]);
 
@@ -374,7 +452,6 @@ function App() {
                 <CustomSelect
                   label={"Country"}
                   value={country}
-                  key="country-select"
                   handleChange={handleCountryChange}
                   options={countries}
                 />
@@ -383,13 +460,12 @@ function App() {
                 <CustomSelect
                   label={"Simulation Mode"}
                   value={mode}
-                  key="mode-select"
                   handleChange={handleModeChange}
                   options={modes}
                 />
               </div>
             </div>
-            <div className="h-[45vh] flex px-3">
+            <div className="h-[50vh] flex px-3">
               <div className="flex flex-col items-center justify-center min-w-full">
                 <h2 className="text-2xl pb-1">Purchase Planner</h2>
                 <DataGrid
@@ -412,14 +488,17 @@ function App() {
               <PurchaseForm />
             </div>
           </div>
-          <div className="p-8">
-            <div>GRAPHS GO HERE</div>
-            <div className="h-[500px] w-full">
-              {graphDataPoints.length > 0 ? (
-                <LineGraph1 data={graphDataPoints} cO2={cO2} />
+          <div className="graph-container">
+            <div className="h-[50vh] w-full">
+              {offsetDataPoints.length > 0 ? (
+                <OffsetGraph data={offsetDataPoints} cO2={cO2} />
               ) : null}
             </div>
-            <div className="h-96 w-full"></div>
+            <div className="h-[50vh] w-full">
+              {costDataPoints.length > 0 ? (
+                <CostGraph data={costDataPoints} cO2={cO2} />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

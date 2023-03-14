@@ -14,7 +14,11 @@ const CustomSelect = ({ label, value, handleChange, options }) => {
         <Select value={value} label={label} onChange={handleChange}>
           {options &&
             options.map((option) => {
-              return <MenuItem value={option}>{option}</MenuItem>;
+              return (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              );
             })}
         </Select>
       </FormControl>

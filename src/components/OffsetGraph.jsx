@@ -11,7 +11,14 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+import { useEffect, useState } from "react";
+
 const LineGraph1 = ({ data, cO2 }) => {
+  const [maxOffset, setMaxOffset] = useState(1500);
+  useEffect(() => {
+    setMaxOffset(Number(data[data.length - 1].totalOffset));
+  }, [data]);
+
   const data1 = [
     {
       month: "2027-03-02",
@@ -27,13 +34,14 @@ const LineGraph1 = ({ data, cO2 }) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart
+        key={maxOffset}
         data={data}
         // data={data}
         margin={{
           top: 30,
           right: 15,
           left: 20,
-          bottom: 100,
+          bottom: 10,
         }}
       >
         <CartesianGrid strokeDasharray="4 2" />
@@ -44,7 +52,8 @@ const LineGraph1 = ({ data, cO2 }) => {
           dataKey={"totalOffset"}
           interval="preserveStartEnd"
           type="number"
-          domain={[0, 1500]}
+          domain={[0, maxOffset > cO2 ? maxOffset + 100 : cO2 + 100]}
+          minTickGap={10}
         >
           <Label
             value="Carbon Offset (kg)"
