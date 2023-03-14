@@ -38,8 +38,8 @@ const LineGraph1 = ({ data, cO2 }) => {
         data={data}
         // data={data}
         margin={{
-          top: 30,
-          right: 15,
+          top: 10,
+          right: 20,
           left: 20,
           bottom: 10,
         }}
@@ -67,9 +67,16 @@ const LineGraph1 = ({ data, cO2 }) => {
         <ReferenceLine
           y={cO2}
           label="Your Average Carbon Offset"
-          stroke="red"
+          stroke="#ff1717ab"
+          strokeWidth={3}
         />
-        <Line type="monotone" dataKey="totalOffset" stroke="blue" dot={false} />
+        <Line
+          type="monotone"
+          dataKey="totalOffset"
+          stroke="#3b82f6"
+          dot={false}
+          strokeWidth={3}
+        />
       </LineChart>
     </ResponsiveContainer>
   );

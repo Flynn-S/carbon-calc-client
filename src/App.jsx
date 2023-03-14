@@ -9,7 +9,6 @@ import { format, parseISO, eachMonthOfInterval, addYears } from "date-fns";
 import CustomSelect from "./components/CustomSelect";
 
 // material ui
-import Button from "@mui/material/Button";
 import IconButton from "@mui/material/IconButton";
 
 // data ui
@@ -165,10 +164,9 @@ function App() {
       handleSubmit,
       control,
       setError,
-      watch,
-
       formState: { errors },
     } = useForm({ mode: "onChanges", reValidateMode: "onChange" });
+
     const onSubmit = (data) => {
       if (!isPurchaseAllowed(data)) {
         setError("num_trees", {
@@ -182,7 +180,9 @@ function App() {
     };
     return (
       <>
-        <h3 className="text-xl p-3">Schedule trees to plant</h3>
+        <h3 className="text-xl p-3 text-center font-semibold">
+          Schedule trees to plant
+        </h3>
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="border border-grey-900 rounded-md p-2 w-full flex"
@@ -201,7 +201,6 @@ function App() {
                   showYearDropdown
                   yearDropdownItemNumber={20}
                   scrollableYearDropdown
-                  popperClassName="datePicker-popper"
                   className="mb-2 border border-black rounded-md p-2"
                   placeholderText="Select date"
                   onChange={(date) => field.onChange(date)}
@@ -210,8 +209,6 @@ function App() {
               )}
             />
           </div>
-
-          {/* include validation with required or other standard HTML validation rules */}
           <div className="flex flex-col grow mx-2">
             <label htmlFor="num_trees" className="text-xs text-bold ">
               Number of Trees
@@ -223,7 +220,7 @@ function App() {
                 required: true,
               })}
             />
-            {/* errors will return when field validation fails  */}
+
             {errors.num_trees?.type === "required" && (
               <span className="text-red-500">This field is required</span>
             )}
@@ -237,11 +234,6 @@ function App() {
           >
             <AddCircleIcon />
           </button>
-          {/* <input
-          type="submit"
-          value={`${(<AddCircleIcon />)}`}
-          className="cursor-pointer bg-blue-500 text-white p-2 rounded-xl "
-        /> */}
         </form>
       </>
     );
@@ -252,7 +244,7 @@ function App() {
     fetchData();
   }, []);
 
-  // CALCULATE TOTAL OFFSET TO PLOT ON offset
+  // CALCULATE TOTAL OFFSET TO PLOT ON OFFSET GRAPH
   useEffect(() => {
     if (rows.length > 0) {
       const newRows = rows.map((row) => {
@@ -321,6 +313,7 @@ function App() {
     }
   }, [rows]);
 
+  // CALCULATE TOTAL COST TO PLOT ON CUMULATIVE COST GRAPH
   useEffect(() => {
     if (rows.length > 0) {
       const costRows = rows.map((row) => {
@@ -440,65 +433,67 @@ function App() {
   ];
 
   return (
-    <div className="App">
-      <div className="h-screen">
-        <div className="h-screen grid grid-cols-2 justify-center">
-          <div>
-            <h1 className="title mb-6">Carbon Offset Simulation Tool</h1>
+    <div className="App h-screen">
+      <div className="h-screen grid grid-cols-2 justify-center">
+        <div>
+          <h1 className="title mb-3 px-3 text-center pt-3 text-xl font-bold underline">
+            Carbon Offset Simulation Tool
+          </h1>
 
-            <div className="input-box mb-3">
-              {/* label, variable, handleChange, options */}
-              <div className="m-3">
-                <CustomSelect
-                  label={"Country"}
-                  value={country}
-                  handleChange={handleCountryChange}
-                  options={countries}
-                />
-              </div>
-              <div className="m-3">
-                <CustomSelect
-                  label={"Simulation Mode"}
-                  value={mode}
-                  handleChange={handleModeChange}
-                  options={modes}
-                />
-              </div>
+          <div className="input-box mb-3">
+            <div className="m-3">
+              <CustomSelect
+                label={"Country"}
+                value={country}
+                handleChange={handleCountryChange}
+                options={countries}
+              />
             </div>
-            <div className="h-[50vh] flex px-3">
-              <div className="flex flex-col items-center justify-center min-w-full">
-                <h2 className="text-2xl pb-1">Purchase Planner</h2>
-                <DataGrid
-                  justify="center"
-                  sx={{ width: "100%" }}
-                  rows={rows}
-                  columns={columns}
-                  isCellEditable={(params) => false}
-                  pageSizeOptions={[5, 10, 25]}
-                  initialState={{
-                    pagination: { paginationModel: { pageSize: 5 } },
-                    sorting: {
-                      sortModel: [{ field: "date", sort: "asc" }],
-                    },
-                  }}
-                />
-              </div>
-            </div>
-            <div className="my-3 px-3">
-              <PurchaseForm />
+            <div className="m-3">
+              <CustomSelect
+                label={"Simulation Mode"}
+                value={mode}
+                handleChange={handleModeChange}
+                options={modes}
+                disabled={true}
+              />
             </div>
           </div>
-          <div className="graph-container">
-            <div className="h-[50vh] w-full">
-              {offsetDataPoints.length > 0 ? (
-                <OffsetGraph data={offsetDataPoints} cO2={cO2} />
-              ) : null}
+          <div className="h-[50vh] flex px-3">
+            <div className="flex flex-col items-center justify-center min-w-full">
+              <h2 className="text-xl pb-1 font-semibold">
+                Tree Purchase Planner
+              </h2>
+              <DataGrid
+                justify="center"
+                sx={{ width: "100%" }}
+                rows={rows}
+                columns={columns}
+                isCellEditable={(params) => false}
+                pageSizeOptions={[5, 10, 25]}
+                initialState={{
+                  pagination: { paginationModel: { pageSize: 5 } },
+                  sorting: {
+                    sortModel: [{ field: "date", sort: "asc" }],
+                  },
+                }}
+              />
             </div>
-            <div className="h-[50vh] w-full">
-              {costDataPoints.length > 0 ? (
-                <CostGraph data={costDataPoints} cO2={cO2} />
-              ) : null}
-            </div>
+          </div>
+          <div className="my-3 px-3">
+            <PurchaseForm />
+          </div>
+        </div>
+        <div className="graph-container ">
+          <div className="h-[50vh] w-full">
+            {offsetDataPoints.length > 0 ? (
+              <OffsetGraph data={offsetDataPoints} cO2={cO2} />
+            ) : null}
+          </div>
+          <div className="h-[50vh] w-full">
+            {costDataPoints.length > 0 ? (
+              <CostGraph data={costDataPoints} cO2={cO2} />
+            ) : null}
           </div>
         </div>
       </div>
