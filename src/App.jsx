@@ -180,7 +180,7 @@ function App() {
     };
     return (
       <>
-        <h3 className="text-xl p-3 text-center font-semibold">
+        <h3 className="text-xl px-3 text-center font-semibold">
           Schedule trees to plant
         </h3>
         <form
@@ -347,8 +347,6 @@ function App() {
         []
       );
 
-      console.log(mergedCostArray);
-
       // create an object which sums all the costs on the same date
       const result = {};
       mergedCostArray.map((obj) => {
@@ -436,9 +434,14 @@ function App() {
     <div className="App h-screen">
       <div className="h-screen grid grid-cols-2 justify-center">
         <div>
-          <h1 className="title mb-3 px-3 text-center pt-3 text-xl font-bold underline">
+          <h1 className="title mb-1 px-3 text-center pt-1 text-xl font-bold underline">
             Carbon Offset Simulation Tool
           </h1>
+          <p className="px-6 pb-3 text-xs font-semibold">
+            Use the tools below to estimate how much carbon your tree purchases
+            will offset over time along with the cumulative cost. You can
+            purchase a maximum of 50 trees per calender year.
+          </p>
 
           <div className="input-box mb-3">
             <div className="m-3">
