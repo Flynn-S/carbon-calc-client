@@ -38,6 +38,10 @@ function App() {
   const URL = import.meta.env.PROD
     ? import.meta.env.VITE_PROD_BACKEND_URL
     : import.meta.env.VITE_DEV_BACKEND_URL;
+
+  console.log(import.meta.env.PROD);
+  console.log(import.meta.env.VITE_PROD_BACKEND_URL);
+  console.log(import.meta.env.VITE_DEV_BACKEND_URL);
   console.log(URL);
   const co2Data = [
     { country: "United States", cO2: 1293.33 },
