@@ -35,6 +35,10 @@ function App() {
   const [costDataPoints, setCostDataPoints] = useState([]);
   const modes = ["Monthly", "Annually"];
 
+  const URL = import.meta.env.PROD
+    ? import.meta.env.VITE_PROD_BACKEND_URL
+    : import.meta.env.VITE_DEV_BACKEND_URL;
+
   const co2Data = [
     { country: "United States", cO2: 1293.33 },
     { country: "United Kingdom", cO2: 462.5 },
@@ -45,6 +49,8 @@ function App() {
     { country: "Singapore", cO2: 713.13 },
     { country: "Australia", cO2: 1425 },
   ];
+
+  const maxTreeOffsetPerMonth = 28.5 / 12;
 
   let countries = [];
   co2Data.map((countryData) => countries.push(countryData.country));
@@ -67,7 +73,7 @@ function App() {
   const fetchData = async () => {
     setLoading({ isLoading: true });
     try {
-      const res = await axios("http://localhost:5000/calculator");
+      const res = await axios(URL);
       setRows(res.data.data);
 
       setLoading({ isLoading: false });
@@ -103,7 +109,7 @@ function App() {
   const addRow = async (data) => {
     setLoading({ isLoading: true });
     try {
-      const res = await axios.post(`http://localhost:5000/calculator`, {
+      const res = await axios.post(``, {
         date: data.date,
         num_trees: Number(data.num_trees),
       });
@@ -126,8 +132,7 @@ function App() {
       let date = row.date;
       let num_trees = row.num_trees;
 
-      const res = await axios.put(`http://localhost:5000/calculator`, {
-        id: id,
+      const res = await axios.put(`${URL}/${id}`, {
         date: date,
         num_trees: num_trees,
       });
@@ -145,7 +150,7 @@ function App() {
   const deleteRow = async (id) => {
     setLoading({ isLoading: true });
     try {
-      const res = await axios.delete(`http://localhost:5000/calculator/${id}`);
+      const res = await axios.delete(`${URL}/${id}`);
       console.log(res);
       if (res.status === 204) {
         console.log("entry deleted successfully");
@@ -267,7 +272,9 @@ function App() {
           const year = index / 12;
 
           const offsetPerTreePerMonth =
-            year < 6 ? (28.5 / 12 / 72) * index : 28.5 / 12;
+            year < 6
+              ? (maxTreeOffsetPerMonth / 72) * index
+              : maxTreeOffsetPerMonth;
 
           const totalOffset = offsetPerTreePerMonth * row.num_trees;
 
@@ -495,7 +502,7 @@ function App() {
           </div>
           <div className="h-[50vh] w-full">
             {costDataPoints.length > 0 ? (
-              <CostGraph data={costDataPoints} cO2={cO2} />
+              <CostGraph data={costDataPoints} />
             ) : null}
           </div>
         </div>
